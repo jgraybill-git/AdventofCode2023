@@ -141,8 +141,335 @@ namespace AdventofCode2023.Days
             return Convert.ToInt32(minSeedDistance);
         }
 
-        // Temporary brute force
         public int Problem2()
+        {
+            string? line;
+            List<double> seeds = new List<double>();
+            List<List<double>> seedSoil = new List<List<double>>();
+            List<List<double>> soilFertilizer = new List<List<double>>();
+            List<List<double>> fertilizerWater = new List<List<double>>();
+            List<List<double>> waterLight = new List<List<double>>();
+            List<List<double>> lightTemperature = new List<List<double>>();
+            List<List<double>> temperatureHumidity = new List<List<double>>();
+            List<List<double>> humidityLocation = new List<List<double>>();
+
+            List<List<double>> currentMap = new List<List<double>>();
+            List<Tuple<double, double>> seedPairs = new List<Tuple<double, double>>();
+
+            List<string> maps = new List<string>()
+                {
+                    "seed-to-soil", "soil-to-fertilizer", "fertilizer-to-water", "water-to-light",
+                    "light-to-temperature", "temperature-to-humidity", "humidity-to-location"
+                };
+            Regex numbers = new Regex(@"\d+");
+            using (var fileStream = File.OpenRead(InputFile))
+            using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true))
+            {
+                while ((line = streamReader.ReadLine()) != null)
+                {
+                    if (String.IsNullOrEmpty(line.Trim()))
+                    {
+                        continue;
+                    }
+
+                    if (line.Contains("seeds:"))
+                    {
+                        List<string> fileSeeds = line.Split(':')[1].Trim().Split(' ').ToList();
+                        for (int i = 0; i < fileSeeds.Count - 1; i += 2)
+                        {
+                            double seed = Convert.ToDouble(fileSeeds[i]);
+                            double seedCount = Convert.ToDouble(fileSeeds[i + 1]);
+                            seedPairs.Add(new Tuple<double, double>(seed, seedCount));
+                        }
+                        continue;
+                    }
+
+                    foreach (var map in maps)
+                    {
+                        if ($"{map} map:".ToLower() == line.Trim().ToLower())
+                        {
+                            switch (maps.IndexOf(map))
+                            {
+                                case 0:
+                                    currentMap = seedSoil;
+                                    break;
+                                case 1:
+                                    currentMap = soilFertilizer;
+                                    break;
+                                case 2:
+                                    currentMap = fertilizerWater;
+                                    break;
+                                case 3:
+                                    currentMap = waterLight;
+                                    break;
+                                case 4:
+                                    currentMap = lightTemperature;
+                                    break;
+                                case 5:
+                                    currentMap = temperatureHumidity;
+                                    break;
+                                case 6:
+                                    currentMap = humidityLocation;
+                                    break;
+                            }
+                        }
+                    }
+
+                    MatchCollection matches = numbers.Matches(line);
+                    if (matches.Count == 3)
+                    {
+                        double rangeLen = Convert.ToDouble(matches.ElementAt(2).Value);
+                        double dest = Convert.ToDouble(matches.ElementAt(0).Value);
+                        double source = Convert.ToDouble(matches.ElementAt(1).Value);
+
+                        currentMap.Add(new List<double>() { source, dest, rangeLen });
+                    }
+                }
+            }
+
+            List<List<List<double>>> mappings = new List<List<List<double>>>()
+            {
+                seedSoil,
+                soilFertilizer,
+                fertilizerWater,
+                waterLight,
+                lightTemperature,
+                temperatureHumidity,
+                humidityLocation
+            };
+
+            double minSeedDistance = double.MaxValue;
+            List<Tuple<double, double, int>> mapAtLevel = new List<Tuple<double, double, int>>();
+
+            foreach (var seedRange in seedPairs)
+            {
+                var minSeed = seedRange.Item1;
+                var maxSeed = minSeed + seedRange.Item2 - 1;
+
+                List<Tuple<double, double>> mapped = MapRange(minSeed, maxSeed, seedSoil);
+
+                foreach (var t in mapped)
+                {
+                    mapAtLevel.Add(new Tuple<double, double, int>(t.Item1, t.Item2, 1));
+                    //Console.WriteLine("MAPPED: " + t.Item1 + "----" + t.Item2);
+                }
+
+                ///===
+                List<Tuple<double, double, int>> toAdd = new List<Tuple<double, double, int>>();
+                foreach (var range in mapAtLevel.Where(x => x.Item3 == 1))
+                {
+                    mapped = MapRange(range.Item1, range.Item2, soilFertilizer);
+
+                    foreach (var t in mapped)
+                    {
+                        toAdd.Add(new Tuple<double, double, int>(t.Item1, t.Item2, 2));
+                        //Console.WriteLine("MAPPED: " + t.Item1 + "----" + t.Item2);
+                    }
+                }
+                foreach(var item in toAdd)
+                {
+                    mapAtLevel.Add(item);
+                }
+                toAdd.Clear();
+
+                ///===
+                foreach (var range in mapAtLevel.Where(x => x.Item3 == 2))
+                {
+                    mapped = MapRange(range.Item1, range.Item2, fertilizerWater);
+
+                    foreach (var t in mapped)
+                    {
+                        toAdd.Add(new Tuple<double, double, int>(t.Item1, t.Item2, 3));
+                        //Console.WriteLine("MAPPED: " + t.Item1 + "----" + t.Item2);
+                    }
+                }
+                foreach (var item in toAdd)
+                {
+                    mapAtLevel.Add(item);
+                }
+                toAdd.Clear();
+
+                ///===
+                foreach (var range in mapAtLevel.Where(x => x.Item3 == 3))
+                {
+                    mapped = MapRange(range.Item1, range.Item2, waterLight);
+
+                    foreach (var t in mapped)
+                    {
+                        toAdd.Add(new Tuple<double, double, int>(t.Item1, t.Item2, 4));
+                        //Console.WriteLine("MAPPED: " + t.Item1 + "----" + t.Item2);
+                    }
+                }
+                foreach (var item in toAdd)
+                {
+                    mapAtLevel.Add(item);
+                }
+                toAdd.Clear();
+
+                ///===
+                foreach (var range in mapAtLevel.Where(x => x.Item3 == 4))
+                {
+                    mapped = MapRange(range.Item1, range.Item2, lightTemperature);
+
+                    foreach (var t in mapped)
+                    {
+                        toAdd.Add(new Tuple<double, double, int>(t.Item1, t.Item2, 5));
+                        //Console.WriteLine("MAPPED: " + t.Item1 + "----" + t.Item2);
+                    }
+                }
+                foreach (var item in toAdd)
+                {
+                    mapAtLevel.Add(item);
+                }
+                toAdd.Clear();
+
+                ///===
+                foreach (var range in mapAtLevel.Where(x => x.Item3 == 5))
+                {
+                    mapped = MapRange(range.Item1, range.Item2, temperatureHumidity);
+
+                    foreach (var t in mapped)
+                    {
+                        toAdd.Add(new Tuple<double, double, int>(t.Item1, t.Item2, 6));
+                        //Console.WriteLine("MAPPED: " + t.Item1 + "----" + t.Item2);
+                    }
+                }
+                foreach (var item in toAdd)
+                {
+                    mapAtLevel.Add(item);
+                }
+                toAdd.Clear();
+
+                ///===
+                foreach (var range in mapAtLevel.Where(x => x.Item3 == 6))
+                {
+                    mapped = MapRange(range.Item1, range.Item2, humidityLocation);
+
+                    foreach (var t in mapped)
+                    {
+                        toAdd.Add(new Tuple<double, double, int>(t.Item1, t.Item2, 7));
+                        //Console.WriteLine("MAPPED: " + t.Item1 + "----" + t.Item2);
+                    }
+                }
+                foreach (var item in toAdd)
+                {
+                    mapAtLevel.Add(item);
+                }
+                toAdd.Clear();
+
+                foreach (var th in mapAtLevel.Where(x => x.Item3 == 7).ToList())
+                {
+                    //Console.WriteLine("=====================" + th.Item1 + " " + th.Item2);
+                }
+
+            }
+            
+            return Convert.ToInt32(mapAtLevel.Where(x => x.Item3 == 7).Select(x => x.Item1).Min()); //Convert.ToInt32(minSeedDistance);
+        }
+
+
+        private List<Tuple<double, double>> MapRange(double srcStart, double srcEnd, List<List<double>> dstRanges)
+        {
+            List<Tuple<double, double>> mappings = new List<Tuple<double, double>>();
+            List<Tuple<double, double, double>> srcMapped = new List<Tuple<double, double, double>>();
+
+            foreach (List<double> dstRange in dstRanges)
+            {
+                double dstStart = dstRange.ElementAt(0);
+                double dstEnd = dstStart + dstRange.ElementAt(2) - 1;
+                double offset = dstRange.ElementAt(1) - dstStart;
+
+                // |--------------|
+                // |------------------|
+                if (srcStart == dstStart && srcEnd < dstEnd)
+                {
+                    srcMapped.Add(new Tuple<double, double, double>(srcStart, srcEnd, offset));
+                }
+                //     |--------------|
+                // |------------------|
+                else if (srcStart > dstStart && srcEnd == dstEnd)
+                {
+                    srcMapped.Add(new Tuple<double, double, double>(srcStart, srcEnd, offset));
+                }
+                // |--------------|
+                //      |------------------|
+                else if (srcStart < dstStart & srcEnd > dstStart && srcEnd <= dstEnd)
+                {
+                    srcMapped.Add(new Tuple<double, double, double>(dstStart, srcEnd, offset));
+                }
+                //           |--------------|
+                // |------------------|
+                else if (srcEnd > dstEnd && srcStart >= dstStart && srcStart < dstEnd)
+                {
+                    srcMapped.Add(new Tuple<double, double, double>(srcStart, dstEnd, offset));
+                }
+                // |--------------|
+                //                |------------------|
+                else if (srcEnd == dstStart)
+                {
+                    srcMapped.Add(new Tuple<double, double, double>(srcEnd, srcEnd, offset));
+                }
+                //                    |--------------|
+                // |------------------|
+                else if (srcStart == dstEnd)
+                {
+                    srcMapped.Add(new Tuple<double, double, double>(srcStart, srcStart, offset));
+                }
+                //   |--------------|         OR      |------------------|
+                // |------------------|               |------------------|
+                else if (srcStart >= dstStart && srcEnd <= dstEnd)
+                {
+                    srcMapped.Add(new Tuple<double, double, double>(srcStart, srcEnd, offset));
+                }
+                // |--------------|                       OR           |------------------|
+                //                   |----------------|                                      |------------------|
+                else if (srcEnd < dstStart || srcEnd < dstStart)
+                {
+                    // UNMAPPED
+                }
+            }
+
+            var orderedMappedRanges = srcMapped.OrderBy(x => x.Item1).ToList();
+
+            for(int i = 0; i < orderedMappedRanges.Count; i++)
+            {
+                var srcRangeMapped = orderedMappedRanges.ElementAt(i);
+
+                var nextRangeMapped = new Tuple<double, double, double>(-1, -1, -1);
+
+                if(orderedMappedRanges.Count > 1 && i <= orderedMappedRanges.Count - 2)
+                {
+                    nextRangeMapped = orderedMappedRanges.ElementAt(i + 1);
+                }
+
+                // Add unmapped cases between ordered ranges
+                if (i == 0 && srcRangeMapped.Item1 > srcStart)
+                {
+                    mappings.Add(new Tuple<double, double>(srcStart, srcRangeMapped.Item1 - 1));
+                }
+                else if(nextRangeMapped.Item1 != -1 && i == orderedMappedRanges.Count - 2 && nextRangeMapped.Item2 < srcEnd)
+                {
+                    mappings.Add(new Tuple<double, double>(nextRangeMapped.Item2 + 1, srcEnd));
+                }
+                else if(nextRangeMapped.Item1 != -1 &&  nextRangeMapped.Item1 - srcRangeMapped.Item2 > 1)
+                {
+                    mappings.Add(new Tuple<double, double>(srcRangeMapped.Item2 + 1, nextRangeMapped.Item1 -1));
+                }
+
+                mappings.Add(new Tuple<double, double>(srcRangeMapped.Item1 + srcRangeMapped.Item3,
+                    srcRangeMapped.Item2 + srcRangeMapped.Item3));
+            }
+
+            if(orderedMappedRanges.Count == 0)
+            {
+                mappings.Add(new Tuple<double, double>(srcStart, srcEnd));
+            }
+
+            return mappings;
+        }
+
+        // Temporary brute force
+        public int Problem2BruteForce()
         {
             string? line;
             List<double> seeds = new List<double>();
