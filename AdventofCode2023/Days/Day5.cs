@@ -12,7 +12,7 @@ namespace AdventofCode2023.Days
     {
         private int DayNum = 5;
         private string InputFile;
-        bool UseTestingFile = true;
+        bool UseTestingFile = false;
         public Day5()
         {
             InputFile = $@"/Users/jgraybill/Projects/AdventofCode2023/AdventofCode2023/Inputs/Day{DayNum}.txt";
@@ -141,7 +141,165 @@ namespace AdventofCode2023.Days
             return Convert.ToInt32(minSeedDistance);
         }
 
+        // Temporary brute force
+        public int Problem2()
+        {
+            string? line;
+            List<double> seeds = new List<double>();
+            List<double> seeds2 = new List<double>();
+            List<List<double>> seedSoil = new List<List<double>>();
+            List<List<double>> soilFertilizer = new List<List<double>>();
+            List<List<double>> fertilizerWater = new List<List<double>>();
+            List<List<double>> waterLight = new List<List<double>>();
+            List<List<double>> lightTemperature = new List<List<double>>();
+            List<List<double>> temperatureHumidity = new List<List<double>>();
+            List<List<double>> humidityLocation = new List<List<double>>();
 
+            List<List<double>> currentMap = new List<List<double>>();
+
+            List<string> maps = new List<string>()
+                {
+                    "seed-to-soil", "soil-to-fertilizer", "fertilizer-to-water", "water-to-light",
+                    "light-to-temperature", "temperature-to-humidity", "humidity-to-location"
+                };
+            Regex numbers = new Regex(@"\d+");
+            using (var fileStream = File.OpenRead(InputFile))
+            using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true))
+            {
+                while ((line = streamReader.ReadLine()) != null)
+                {
+                    if (String.IsNullOrEmpty(line.Trim()))
+                    {
+                        continue;
+                    }
+
+                    if (line.Contains("seeds:"))
+                    {
+                        List<string> fileSeeds = line.Split(':')[1].Trim().Split(' ').ToList();
+                        
+                        for (int fs = 0; fs < fileSeeds.Count - 1; fs += 2)
+                        {
+                            double seed = Convert.ToDouble(fileSeeds[fs]);
+                            double seedCount = Convert.ToDouble(fileSeeds[fs + 1]);
+                            for(double seedI = 0; seedI < seedCount; seedI++)
+                            {
+                                if(fs >= 10)
+                                {
+                                    seeds2.Add(seed + seedI);
+                                }
+                                else
+                                {
+                                    seeds.Add(seed + seedI);
+                                }
+                                
+                                if(seedI % 10000 == 0)
+                                {
+                                    Console.WriteLine(fs + " at " + seedI + " / " + seedCount);
+                                }
+                            }
+                            Console.WriteLine("Done building seed list " + fs);
+                        }
+                        continue;
+                    }
+
+                    foreach (var map in maps)
+                    {
+                        if ($"{map} map:".ToLower() == line.Trim().ToLower())
+                        {
+                            switch (maps.IndexOf(map))
+                            {
+                                case 0:
+                                    currentMap = seedSoil;
+                                    break;
+                                case 1:
+                                    currentMap = soilFertilizer;
+                                    break;
+                                case 2:
+                                    currentMap = fertilizerWater;
+                                    break;
+                                case 3:
+                                    currentMap = waterLight;
+                                    break;
+                                case 4:
+                                    currentMap = lightTemperature;
+                                    break;
+                                case 5:
+                                    currentMap = temperatureHumidity;
+                                    break;
+                                case 6:
+                                    currentMap = humidityLocation;
+                                    break;
+                            }
+                        }
+                    }
+
+                    MatchCollection matches = numbers.Matches(line);
+                    if (matches.Count == 3)
+                    {
+                        double rangeLen = Convert.ToDouble(matches.ElementAt(2).Value);
+                        double dest = Convert.ToDouble(matches.ElementAt(0).Value);
+                        double source = Convert.ToDouble(matches.ElementAt(1).Value);
+
+                        currentMap.Add(new List<double>() { source, dest, rangeLen });
+                    }
+                }
+            }
+
+            List<List<List<double>>> mappings = new List<List<List<double>>>()
+            {
+                seedSoil,
+                soilFertilizer,
+                fertilizerWater,
+                waterLight,
+                lightTemperature,
+                temperatureHumidity,
+                humidityLocation
+            };
+
+            double minSeedDistance = double.MaxValue;
+            foreach (var seed in seeds)
+            {
+                double mapVal = seed;
+                foreach (var mapping in mappings)
+                {
+                    foreach (var valRange in mapping)
+                    {
+                        double sourceStart = valRange.ElementAt(0);
+                        if (mapVal >= sourceStart && mapVal < sourceStart + valRange.ElementAt(2))
+                        {
+                            double mapPos = mapVal - sourceStart;
+                            mapVal = valRange.ElementAt(1) + mapPos;
+                            break;
+                        }
+                    }
+                }
+
+                minSeedDistance = Math.Min(minSeedDistance, mapVal);
+            }
+
+            foreach (var seed in seeds2)
+            {
+                double mapVal = seed;
+                foreach (var mapping in mappings)
+                {
+                    foreach (var valRange in mapping)
+                    {
+                        double sourceStart = valRange.ElementAt(0);
+                        if (mapVal >= sourceStart && mapVal < sourceStart + valRange.ElementAt(2))
+                        {
+                            double mapPos = mapVal - sourceStart;
+                            mapVal = valRange.ElementAt(1) + mapPos;
+                            break;
+                        }
+                    }
+                }
+
+                minSeedDistance = Math.Min(minSeedDistance, mapVal);
+
+            }
+
+            return Convert.ToInt32(minSeedDistance);
+        }
 
         public int Problem2Old()
         {
@@ -287,7 +445,7 @@ namespace AdventofCode2023.Days
         }
 
 
-        public int Problem2()
+        public int Problem2Progress()
         {
             string? line;
             List<double> seeds = new List<double>();
