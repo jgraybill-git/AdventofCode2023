@@ -12,7 +12,7 @@ namespace AdventofCode2023.Days
     {
         private int DayNum = 5;
         private string InputFile;
-        bool UseTestingFile = false;
+        bool UseTestingFile = true;
         public Day5()
         {
             InputFile = $@"/Users/jgraybill/Projects/AdventofCode2023/AdventofCode2023/Inputs/Day{DayNum}{(UseTestingFile ? "Testing" : String.Empty)}.txt";
@@ -225,6 +225,7 @@ namespace AdventofCode2023.Days
 
             List<List<List<double>>> mappings = new List<List<List<double>>>()
             {
+                seedSoil,
                 soilFertilizer,
                 fertilizerWater,
                 waterLight,
@@ -233,8 +234,8 @@ namespace AdventofCode2023.Days
                 humidityLocation
             };
 
-            List<Tuple<double, double, int>> mapAtLevel = new List<Tuple<double, double, int>>();
-            List<Tuple<double, double, int>> addToLevel = new List<Tuple<double, double, int>>();
+            List<Tuple<double, double, int, string, string>> mapAtLevel = new List<Tuple<double, double, int, string, string>>();
+            List<Tuple<double, double, int, string, string>> addToLevel = new List<Tuple<double, double, int, string, string>>();
             List<double> minSeedResult = new List<double>();
             foreach (var seedRange in seedPairs)
             {
@@ -244,23 +245,23 @@ namespace AdventofCode2023.Days
                 int currentMapIndex = 1;
 
                 List<Tuple<double, double>> mapped = MapRange(minSeed, maxSeed, seedSoil);
-
+                var seedGuid = Guid.NewGuid().ToString();
                 foreach (var item in mapped)
                 {
-                    mapAtLevel.Add(new Tuple<double, double, int>(item.Item1, item.Item2, currentMapIndex));
+                    mapAtLevel.Add(new Tuple<double, double, int, string, string>(item.Item1, item.Item2, currentMapIndex, "-1", seedGuid));
                 }
 
                 
-                foreach(var map in mappings)
+                foreach(var map in mappings.Where(x => mappings.IndexOf(x) != 0))
                 {
+                    //var rangeParentID = mapAtLevel.Where(x => x.Item3 == currentMapIndex).First().Item5;
                     foreach (var range in mapAtLevel.Where(x => x.Item3 == currentMapIndex))
                     {
                         mapped = MapRange(range.Item1, range.Item2, map);
-
-                        foreach (var rangeRes in mapped)
-                        {
-                            addToLevel.Add(new Tuple<double, double, int>(rangeRes.Item1, rangeRes.Item2, currentMapIndex + 1));
-                        }
+                        //foreach (var rangeRes in mapped)
+                        //{
+                        //    addToLevel.Add(new Tuple<double, double, int, string, string>(rangeRes.Item1, rangeRes.Item2, currentMapIndex + 1, rangeParentID, Guid.NewGuid().ToString()));
+                        //}
                     }
                     foreach (var item in addToLevel)
                     {
@@ -273,6 +274,30 @@ namespace AdventofCode2023.Days
                 minSeedResult.Add(mapAtLevel.Where(x => x.Item3 == 7).Select(x => x.Item1).Min());
 
             }
+
+            var minSeedRange = mapAtLevel.Where(x => x.Item1 == minSeedResult.Min()).First();
+            double minSeedDistance = double.MaxValue;
+
+            for(double i = minSeedRange.Item1; i < minSeedRange.Item2; i++)
+            {
+                var parentGuid = minSeedRange.Item4;
+                var parentLevel = minSeedRange.Item3;
+                for(int j = parentLevel; j > 0; j--)
+                {
+                    if(!mapAtLevel.Where(x => x.Item3 == j - 1 && x.Item4 == parentGuid).Any())
+                    {
+                        break;
+                    }
+                    parentGuid = mapAtLevel.Where(x => x.Item3 == j && x.Item4 == parentGuid).First().Item4;
+                }
+
+                if(1 == 5)
+                {
+                    int fdsa = 432;
+                }
+            }
+            
+
 
             return Convert.ToInt32(minSeedResult.Min());
         }
