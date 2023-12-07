@@ -13,6 +13,7 @@ namespace AdventofCode2023.Days
         private int DayNum = 6;
         private string InputFile;
         private bool UseTestingFile = false;
+
         public Day6()
         {
             InputFile = $@"/Users/jgraybill/Projects/AdventofCode2023/AdventofCode2023/Inputs/Day{DayNum}{(UseTestingFile ? "Testing" : String.Empty)}.txt";

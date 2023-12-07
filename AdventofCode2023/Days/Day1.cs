@@ -11,23 +11,25 @@ namespace AdventofCode2023.Days
     {
         private int DayNum = 1;
         private string InputFile;
-        private Dictionary<string, int> Numbers = new Dictionary<string, int>()
-            {
-                { "one", 1 },
-                { "two", 2 },
-                { "three", 3 },
-                { "four", 4 },
-                { "five", 5 },
-                { "six", 6 },
-                { "seven", 7 },
-                { "eight", 8 },
-                { "nine", 9 }
-            };
+        private bool UseTestingFile = false;
 
         public Day1()
         {
-            InputFile = $@"/Users/jgraybill/Projects/AdventofCode2023/AdventofCode2023/Inputs/Day{DayNum}.txt";
+            InputFile = $@"/Users/jgraybill/Projects/AdventofCode2023/AdventofCode2023/Inputs/Day{DayNum}{(UseTestingFile ? "Testing" : String.Empty)}.txt";
         }
+
+        private Dictionary<string, int> Numbers = new Dictionary<string, int>()
+        {
+            { "one", 1 },
+            { "two", 2 },
+            { "three", 3 },
+            { "four", 4 },
+            { "five", 5 },
+            { "six", 6 },
+            { "seven", 7 },
+            { "eight", 8 },
+            { "nine", 9 }
+        };
 
         public int Problem1()
         {
