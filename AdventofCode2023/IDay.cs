@@ -7,5 +7,12 @@ namespace AdventofCode2023
 
 		int Problem2();
 	}
+
+    public interface IDayDbl
+    {
+        double Problem1();
+
+        double Problem2();
+    }
 }
 

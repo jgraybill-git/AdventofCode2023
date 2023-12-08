@@ -12,10 +12,9 @@ Dictionary<int, Tuple<IDay, bool, bool>> days = new Dictionary<int, Tuple<IDay, 
     { 2, new Tuple<IDay, bool, bool>(new Day2(), false, false) },
     { 3, new Tuple<IDay, bool, bool>(new Day3(), false, false) },
     { 4, new Tuple<IDay, bool, bool>(new Day4(), false, false) },
-    { 5, new Tuple<IDay, bool, bool>(new Day5(), false, true) },
+    { 5, new Tuple<IDay, bool, bool>(new Day5(), false, false) },
     { 6, new Tuple<IDay, bool, bool>(new Day6(), false, false) },
     { 7, new Tuple<IDay, bool, bool>(new Day7(), false, false) },
-    { 8, new Tuple<IDay, bool, bool>(new Day8(), true, true) },
     { 9, new Tuple<IDay, bool, bool>(new Day9(), false, false) },
     { 10, new Tuple<IDay, bool, bool>(new Day10(), false, false) },
     { 11, new Tuple<IDay, bool, bool>(new Day11(), false, false) },
@@ -35,13 +34,33 @@ Dictionary<int, Tuple<IDay, bool, bool>> days = new Dictionary<int, Tuple<IDay, 
     { 25, new Tuple<IDay, bool, bool>(new Day25(), false, false) }
 };
 
+Dictionary<int, Tuple<IDayDbl, bool, bool>> daysDbl = new Dictionary<int, Tuple<IDayDbl, bool, bool>>()
+{
+    { 8, new Tuple<IDayDbl, bool, bool>(new Day8(), true, true) }
+};
 
-foreach(var day in days)
+
+foreach (var day in days)
 {
     bool runProblem1 = day.Value.Item2;
     bool runProblem2 = day.Value.Item3;
 
     if(runProblem1)
+    {
+        Console.WriteLine($"Day {day.Key} Problem 1: {day.Value.Item1.Problem1()}");
+    }
+    if (runProblem2)
+    {
+        Console.WriteLine($"Day {day.Key} Problem 2: {day.Value.Item1.Problem2()}");
+    }
+}
+
+foreach (var day in daysDbl)
+{
+    bool runProblem1 = day.Value.Item2;
+    bool runProblem2 = day.Value.Item3;
+
+    if (runProblem1)
     {
         Console.WriteLine($"Day {day.Key} Problem 1: {day.Value.Item1.Problem1()}");
     }
