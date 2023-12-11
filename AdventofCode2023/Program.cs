@@ -16,8 +16,7 @@ Dictionary<int, Tuple<IDay, bool, bool>> days = new Dictionary<int, Tuple<IDay, 
     { 6, new Tuple<IDay, bool, bool>(new Day6(), false, false) },
     { 7, new Tuple<IDay, bool, bool>(new Day7(), false, false) },
     { 9, new Tuple<IDay, bool, bool>(new Day9(), false, false) },
-    { 10, new Tuple<IDay, bool, bool>(new Day10(), false, true) },
-    { 11, new Tuple<IDay, bool, bool>(new Day11(), false, false) },
+    { 10, new Tuple<IDay, bool, bool>(new Day10(), false, false) },
     { 12, new Tuple<IDay, bool, bool>(new Day12(), false, false) },
     { 13, new Tuple<IDay, bool, bool>(new Day13(), false, false) },
     { 14, new Tuple<IDay, bool, bool>(new Day14(), false, false) },
@@ -36,7 +35,8 @@ Dictionary<int, Tuple<IDay, bool, bool>> days = new Dictionary<int, Tuple<IDay, 
 
 Dictionary<int, Tuple<IDayDbl, bool, bool>> daysDbl = new Dictionary<int, Tuple<IDayDbl, bool, bool>>()
 {
-    { 8, new Tuple<IDayDbl, bool, bool>(new Day8(), false, false) }
+    { 8, new Tuple<IDayDbl, bool, bool>(new Day8(), false, false) },
+    { 11, new Tuple<IDayDbl, bool, bool>(new Day11(), false, false) }
 };
 
 
