@@ -78,7 +78,7 @@ namespace AdventofCode2023.Days
                             currentTile.Direction = goInDirections.First();
                             GridTile moveResult = MoveToNextTile(currentTile, ref grid);
 
-                            if (!moveResult.Terminate || !BeenToTileViaDirection(moveResult, ref energizedTiles))
+                            if (!moveResult.Terminate && !BeenToTileViaDirection(moveResult, ref energizedTiles))
                             {
                                 currentTile.X = moveResult.X;
                                 currentTile.Y = moveResult.Y;
@@ -159,17 +159,163 @@ namespace AdventofCode2023.Days
 
         public int Problem2()
         {
+            List<List<char>> inputGrid = new List<List<char>>();
+
+
             string? line;
             using (var fileStream = File.OpenRead(InputFile))
             using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true))
             {
                 while ((line = streamReader.ReadLine()) != null)
                 {
-
+                    inputGrid.Add(line.ToCharArray().ToList());
                 }
             }
 
-            return 0;
+            char[,] grid = new char[inputGrid.Count, inputGrid.ElementAt(0).Count];
+
+            for (int i = 0; i < grid.GetLength(0); i++)
+            {
+                for (int j = 0; j < grid.GetLength(1); j++)
+                {
+                    grid[i, j] = inputGrid.ElementAt(i).ElementAt(j);
+                }
+            }
+
+            inputGrid.Clear();
+
+            char startChar = grid[0, 0];
+
+            int maxEnergizedTiles = int.MinValue;
+
+            List<GridTile> initialTileOpts = new List<GridTile>();
+            for(int tileRow = 0; tileRow < grid.GetLength(0); tileRow++)
+            {
+                initialTileOpts.Add(new GridTile(tileRow, 0, Direction.Right));
+                initialTileOpts.Add(new GridTile(tileRow, grid.GetLength(1) - 1, Direction.Left));
+            }
+            for (int tileCol = 0; tileCol < grid.GetLength(1); tileCol++)
+            {
+                initialTileOpts.Add(new GridTile(0, tileCol, Direction.Down));
+                initialTileOpts.Add(new GridTile(grid.GetLength(0) - 1, tileCol, Direction.Up));
+            }
+
+            int fdsa = 0;
+            foreach(var startOpt in initialTileOpts)
+            {
+                Direction startDirection = startOpt.Direction;
+                Console.WriteLine("processed " + fdsa + " /440 " );
+                GridTile startTile = new GridTile(startOpt.X, startOpt.Y, startDirection);
+
+                List<GridTile> energizedTiles = new List<GridTile>()
+                {
+                    new GridTile(startTile.X, startTile.Y, startTile.Direction)
+                };
+
+                List<GridTile> activePaths = new List<GridTile>()
+                {
+                    new GridTile(startTile.X, startTile.Y, startTile.Direction)
+                };
+
+
+                while (!activePaths.All(x => x.Terminate))
+                {
+                    List<GridTile> newTiles = new List<GridTile>();
+                    List<GridTile> removeTiles = new List<GridTile>();
+
+                    foreach (GridTile currentTile in activePaths)
+                    {
+                        if (!currentTile.Terminate)
+                        {
+                            List<Direction> goInDirections = AnalyseTile(currentTile,
+                                grid[currentTile.X, currentTile.Y]);
+
+                            if (goInDirections.Count == 1)
+                            {
+                                currentTile.Direction = goInDirections.First();
+                                GridTile moveResult = MoveToNextTile(currentTile, ref grid);
+
+                                if (!moveResult.Terminate && !BeenToTileViaDirection(moveResult, ref energizedTiles))
+                                {
+                                    currentTile.X = moveResult.X;
+                                    currentTile.Y = moveResult.Y;
+
+                                    energizedTiles.Add(new GridTile(moveResult.X, moveResult.Y, moveResult.Direction));
+                                }
+                                else
+                                {
+                                    currentTile.Terminate = true;
+                                    removeTiles.Add(currentTile);
+                                }
+                            }
+                            else
+                            {
+                                currentTile.Direction = goInDirections[0];
+                                GridTile moveResultOne = MoveToNextTile(currentTile, ref grid);
+
+                                currentTile.Direction = goInDirections[1];
+                                GridTile moveResultTwo = MoveToNextTile(currentTile, ref grid);
+
+                                if (!moveResultOne.Terminate && !BeenToTileViaDirection(moveResultOne, ref energizedTiles))
+                                {
+                                    newTiles.Add(moveResultOne);
+                                    energizedTiles.Add(new GridTile(moveResultOne.X, moveResultOne.Y, moveResultOne.Direction));
+                                }
+                                if (!moveResultTwo.Terminate && !BeenToTileViaDirection(moveResultTwo, ref energizedTiles))
+                                {
+                                    newTiles.Add(moveResultTwo);
+                                    energizedTiles.Add(new GridTile(moveResultTwo.X, moveResultTwo.Y, moveResultTwo.Direction));
+                                }
+
+                                if (newTiles.Count == 0 || newTiles.Count == 2)
+                                {
+                                    currentTile.Terminate = true;
+                                    removeTiles.Add(currentTile);
+                                }
+                                else if (newTiles.Count == 1)
+                                {
+                                    newTiles.Add(new GridTile(newTiles.First().X, newTiles.First().Y, newTiles.First().Direction));
+                                    removeTiles.Add(currentTile);
+                                }
+                            }
+                        }
+                    }
+
+                    foreach (var tile in removeTiles)
+                    {
+                        activePaths.Remove(tile);
+                    }
+                    foreach (var tile in newTiles)
+                    {
+                        activePaths.Add(tile);
+                    }
+                }
+
+                var distinctTiles = GetDistinctTiles(energizedTiles);
+                maxEnergizedTiles = Math.Max(maxEnergizedTiles, distinctTiles.Count);
+                fdsa++;
+            }
+
+            
+
+            //for (int x = 0; x < grid.GetLength(0); x++)
+            //{
+            //    Console.WriteLine();
+            //    for (int y = 0; y < grid.GetLength(1); y++)
+            //    {
+            //        if (distinctTiles.Where(z => z.X == x && z.Y == y).Any())
+            //        {
+            //            Console.Write("#");
+            //        }
+            //        else
+            //        {
+            //            Console.Write(".");
+            //        }
+            //    }
+            //}
+            //Console.WriteLine();
+
+            return maxEnergizedTiles;
         }
 
         private bool BeenToTileViaDirection(GridTile moveResult, ref List<GridTile> energizedTiles)
