@@ -204,7 +204,7 @@ namespace AdventofCode2023.Days
             foreach(var startOpt in initialTileOpts)
             {
                 Direction startDirection = startOpt.Direction;
-                Console.WriteLine("processed " + fdsa + " /440 " );
+
                 GridTile startTile = new GridTile(startOpt.X, startOpt.Y, startDirection);
 
                 List<GridTile> energizedTiles = new List<GridTile>()
