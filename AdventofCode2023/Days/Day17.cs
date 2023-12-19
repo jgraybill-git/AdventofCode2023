@@ -37,73 +37,103 @@ namespace AdventofCode2023.Days
                 }
             }
 
-            PriorityQueue<GraphNode, int> pq = new PriorityQueue<GraphNode, int>();
+            PriorityQueue<GraphNode, int> frontier = new PriorityQueue<GraphNode, int>();
             GraphNode start = new GraphNode(0, 0, null);
             List<GraphNode> explored = new List<GraphNode>();
-            pq.Enqueue(start, 0);
+            frontier.Enqueue(start, 0);
+            int rowCount = inputGrid.Count;
+            int colCount = inputGrid.ElementAt(0).Count;
+            
 
-            var choice = pq.Dequeue();
-            while(choice != null)
+            while(frontier.Count > 0)
             {
 
-                if(choice.X == inputGrid.Count - 1 && choice.Y == inputGrid.ElementAt(0).Count - 1)
+                GraphNode choice = frontier.Dequeue();
+                //if (choice.X == inputGrid.Count - 1 && choice.Y == inputGrid.ElementAt(0).Count - 1)
+                //{
+                //    break;
+                //    //return choice.CurrentPathCost;
+                //}
+                if (choice.X == 0 && choice.Y == 8)
                 {
-                    return choice.CurrentPathCost;
+                    int rre = 5;
+                    //return choice.CurrentPathCost;
                 }
 
-                var adjacencies = GetAdjacencies(choice, ref inputGrid);
+                List<GraphNode> adjacencies = GetAdjacencies(choice, ref inputGrid);
 
                 foreach(var adj in adjacencies)
                 {
-                    var edgeCost = adj.CurrentPathCost - choice.CurrentPathCost;
-                    var newPathCost = adj.CurrentPathCost;
-
-                    pq.Enqueue(adj, adj.CurrentPathCost);
-                    var exploredNode = InExplored(adj, ref explored);
-                    if (exploredNode != null)
+                    if(adj.X == 0 && adj.Y == 5)
                     {
-                        if(exploredNode.CurrentPathCost < adj.CurrentPathCost)
-                        {
+                        int fdsa = 5;
+                    }
 
+                    if (adj.X == rowCount - 1 && adj.Y == colCount - 1)
+                    {
+                        explored.Add(adj);
+                        break;
+                        //return choice.CurrentPathCost;
+                    }
+
+                    //var edgeCost = adj.CurrentPathCost - choice.CurrentPathCost;
+                    //var newPathCost = adj.CurrentPathCost;
+
+
+
+                    GraphNode? exploredItem = explored.Where(x => x.X == adj.X && x.Y == adj.Y && x.Direction == adj.Direction).FirstOrDefault();
+                    //frontier.Enqueue(adj, adj.CurrentPathCost);
+                    if (exploredItem != null)
+                    {
+                        int exploredCost = exploredItem.CurrentPathCost;
+                        
+                        if (adj.CurrentPathCost < exploredCost)
+                        {
+                            //frontier.Enqueue(adj, adj.CurrentPathCost);
+                            exploredItem = adj;
                         }
                     }
                     else
                     {
-                        
+                        frontier.Enqueue(adj, adj.CurrentPathCost);
+                        explored.Add(adj);
                     }
-
-                    explored.Add(adj);
+                     
                 }
+
             }
 
-            return 0;
 
-            /*
-             * function Dijkstra(Graph, source):
-2      dist[source] ← 0                           // Initialization
-3
-4      create vertex priority queue Q
-5
-6      for each vertex v in Graph.Vertices:
-7          if v ≠ source
-8              dist[v] ← INFINITY                 // Unknown distance from source to v
-9              prev[v] ← UNDEFINED                // Predecessor of v
-10
-11         Q.add_with_priority(v, dist[v])
-12
-13
-14     while Q is not empty:                      // The main loop
-15         u ← Q.extract_min()                    // Remove and return best vertex
-16         for each neighbor v of u:              // Go through all v neighbors of u
-17             alt ← dist[u] + Graph.Edges(u, v)
-18             if alt < dist[v]:
-19                 dist[v] ← alt
-20                 prev[v] ← u
-21                 Q.decrease_priority(v, alt)
-22
-23     return dist, prev
-             * 
-             * */
+
+            var tr = explored.Where(x => x.X == rowCount - 1 && x.Y == colCount - 1).ToList();
+            var path = explored.Where(x => x.X == rowCount - 1 && x.Y == colCount - 1).First();
+
+            List<GraphNode> parents = new List<GraphNode>() { path };
+            var parent = path.ParentNode;
+            while(parent != null)
+            {
+                parents.Add(parent);
+                parent = parent.ParentNode;
+            }
+
+            for (int i = 0; i < rowCount; i++)
+            {
+                Console.WriteLine();
+                for (int j = 0; j < colCount; j++)
+                {
+                    if (parents.Where(x => x.X == i && x.Y == j).Any())
+                    {
+                        Console.Write(inputGrid[i][j]);
+                    }
+                    else
+                    {
+                        Console.Write(".");
+                    }
+                }
+            }
+            Console.WriteLine();
+            return explored.Where(x => x.X == rowCount - 1 && x.Y == colCount - 1).Select(x => x.CurrentPathCost).Min(); //.CurrentPathCost;
+
         }
 
         public int Problem2()
@@ -121,9 +151,181 @@ namespace AdventofCode2023.Days
             return 0;
         }
 
+        private void PrintExplored(List<GraphNode> explored)
+        {
+            for(int i = 0; i < 13; i++)
+            {
+                Console.WriteLine();
+                for(int j = 0; j < 13; j++)
+                {
+                    if(explored.Where(x => x.X == i && x.Y == j).Any())
+                    {
+                        Console.Write("#");
+                    }
+                    else
+                    {
+                        Console.Write(".");
+                    }
+                }
+            }
+
+
+            Console.WriteLine();
+            Console.WriteLine("============================");
+        }
+
         private List<GraphNode> GetAdjacencies(GraphNode node, ref List<List<int>> grid)
         {
-            var previousNode = node.ParentNode;
+            List<GraphNode> adj = new List<GraphNode>();
+            GraphNode leftNode;
+            GraphNode rightNode;
+            GraphNode upNode;
+            GraphNode downNode;
+
+            int straight = node.CurrentStraightCount;
+            if (node.Direction != Direction.Up)
+            {
+                straight = 0;
+            }
+
+            
+            int i = 1;
+
+            int runningCost = 0;
+            while(3 - straight > 0)
+            {
+                if(node.X - i >= 0)
+                {
+                    runningCost += grid[node.X - i][node.Y];
+                    upNode = new GraphNode(node.X - i, node.Y, node, node.CurrentPathCost + runningCost);
+                    upNode.Direction = Direction.Up;
+                    upNode.CurrentStraightCount = i;
+                    if (!InPathHistory(upNode, node) && node.Direction != Direction.Down)
+                    {
+                        adj.Add(upNode);
+                    }
+                    i++;
+                    straight++;
+                }
+                else { break; }
+            }
+
+
+            runningCost = 0;
+            straight = node.CurrentStraightCount;
+            if (node.Direction != Direction.Down)
+            {
+                straight = 0;
+            }
+
+            i = 1;
+               
+            while (3 - straight > 0)
+            {
+                if (node.X + i < grid.Count)
+                {
+                    if (node.ParentNode is null)
+                    {
+                        var tmpParentNode = new GraphNode(node.X, node.Y, null);
+                        tmpParentNode.Direction = Direction.Down;
+                        runningCost += grid[node.X + i][node.Y];
+                        downNode = new GraphNode(node.X + i, node.Y, tmpParentNode, node.CurrentPathCost + runningCost);
+                        downNode.CurrentStraightCount = i;
+                        downNode.Direction = Direction.Down;
+                    }
+                    else
+                    {
+                        runningCost += grid[node.X + i][node.Y];
+                        downNode = new GraphNode(node.X + i, node.Y, node, node.CurrentPathCost + runningCost);
+                        downNode.CurrentStraightCount = i;
+                        downNode.Direction = Direction.Down;
+                    }
+
+                    if (!InPathHistory(downNode, node) && node.Direction != Direction.Up)
+                    {
+                        adj.Add(downNode);
+                    }
+                    i++;
+                    straight++;
+                }
+                else { break; }
+            }
+
+
+            runningCost = 0;
+            straight = node.CurrentStraightCount;
+            if (node.Direction != Direction.Right)
+            {
+                straight = 0;
+            }
+            i = 1;
+
+            while (3 - straight > 0)
+            {
+                if (node.Y + i < grid.ElementAt(0).Count)
+                {
+                    if (node.ParentNode is null)
+                    {
+                        var tmpParentNode = new GraphNode(node.X, node.Y, null);
+                        tmpParentNode.Direction = Direction.Right;
+                        runningCost += grid[node.X][node.Y + i];
+                        rightNode = new GraphNode(node.X, node.Y + i, tmpParentNode, node.CurrentPathCost + runningCost);
+                        rightNode.CurrentStraightCount = i;
+                        rightNode.Direction = Direction.Right;
+                    }
+                    else
+                    {
+                        runningCost += grid[node.X][node.Y + i];
+                        rightNode = new GraphNode(node.X, node.Y + i, node, node.CurrentPathCost + runningCost);
+                        rightNode.CurrentStraightCount = i;
+                        rightNode.Direction = Direction.Right;
+                    }
+
+                    if (!InPathHistory(rightNode, node) && node.Direction != Direction.Left)
+                    {
+                        adj.Add(rightNode);
+                    }
+                    i++;
+                    straight++;
+                }
+                else { break; }
+            }
+
+            runningCost = 0;
+            straight = node.CurrentStraightCount;
+            if (node.Direction != Direction.Left)
+            {
+                straight = 0;
+            }
+            i = 1;
+
+            while (3 - straight > 0)
+            {
+                if (node.Y - i >= 0)
+                {
+                    runningCost += grid[node.X][node.Y - i];
+                    leftNode = new GraphNode(node.X, node.Y - i, node, node.CurrentPathCost + runningCost);
+                    leftNode.CurrentStraightCount = i;
+                    leftNode.Direction = Direction.Left;
+
+                    if (!InPathHistory(leftNode, node) && node.Direction != Direction.Right)
+                    {
+                        adj.Add(leftNode);
+                    }
+                    i++;
+                    straight++;
+                }
+                else { break; }
+            }
+            
+
+
+            return adj;
+
+        }
+
+        private List<GraphNode> GetAdjacenciesOld(GraphNode node, ref List<List<int>> grid)
+        {
             List<GraphNode> adj = new List<GraphNode>();
             GraphNode leftNode;
             GraphNode rightNode;
@@ -133,47 +335,79 @@ namespace AdventofCode2023.Days
             if(node.X - 1 >= 0)
             {
                 upNode = new GraphNode(node.X - 1, node.Y, node, node.CurrentPathCost + grid[node.X - 1][node.Y]);
-                if(previousNode != null && !(upNode.X == previousNode.X && upNode.Y == previousNode.Y))
-                {
-                    adj.Add(upNode);
-                }
-                if(previousNode == null)
+                upNode.Direction = Direction.Up;
+                //if (upNode.ParentNode is not null)
+                //{
+                //    upNode.ParentNode.Direction = Direction.Up;
+                //}
+
+                if (!InPathHistory(upNode, node) && MeetsThreeStraightConstraint(upNode))
                 {
                     adj.Add(upNode);
                 }
             }
             if (node.X + 1 < grid.Count)
             {
-                downNode = new GraphNode(node.X + 1, node.Y, node, node.CurrentPathCost + grid[node.X + 1][node.Y]);
-                if (previousNode != null && !(downNode.X == previousNode.X && downNode.Y == previousNode.Y))
+                if (node.ParentNode is null)
                 {
-                    adj.Add(downNode);
+                    var tmpParentNode = new GraphNode(node.X, node.Y, null);
+                    tmpParentNode.Direction = Direction.Down;
+                    downNode = new GraphNode(node.X + 1, node.Y, tmpParentNode, node.CurrentPathCost + grid[node.X + 1][node.Y]);
+                    downNode.Direction = Direction.Down;
                 }
-                if (previousNode == null)
+                else
+                {
+                    downNode = new GraphNode(node.X + 1, node.Y, node, node.CurrentPathCost + grid[node.X + 1][node.Y]);
+                    downNode.Direction = Direction.Down;
+                }
+
+
+                if (!InPathHistory(downNode, node) && MeetsThreeStraightConstraint(downNode))
                 {
                     adj.Add(downNode);
                 }
             }
             if (node.Y - 1 >= 0)
             {
+                //if (node.ParentNode is null)
+                //{
+                //    node.Direction = Direction.Left;
+                //}
+
                 leftNode = new GraphNode(node.X, node.Y - 1, node, node.CurrentPathCost + grid[node.X][node.Y - 1]);
-                if (previousNode != null && !(leftNode.X == previousNode.X && leftNode.Y == previousNode.Y))
-                {
-                    adj.Add(leftNode);
-                }
-                if (previousNode == null)
+                leftNode.Direction = Direction.Left;
+                //if (leftNode.ParentNode is not null)
+                //{
+                //    leftNode.ParentNode.Direction = Direction.Left;
+                //}
+
+                if (!InPathHistory(leftNode, node) && MeetsThreeStraightConstraint(leftNode))
                 {
                     adj.Add(leftNode);
                 }
             }
             if (node.Y + 1 < grid.ElementAt(0).Count)
             {
-                rightNode = new GraphNode(node.X, node.Y + 1, node, node.CurrentPathCost + grid[node.X][node.Y + 1]);
-                if (previousNode != null && !(rightNode.X == previousNode.X && rightNode.Y == previousNode.Y))
+                if(node.ParentNode is null)
                 {
-                    adj.Add(rightNode);
+                    var tmpParentNode = new GraphNode(node.X, node.Y, null);
+                    tmpParentNode.Direction = Direction.Right;
+                    rightNode = new GraphNode(node.X, node.Y + 1, tmpParentNode, node.CurrentPathCost + grid[node.X][node.Y + 1]);
+                    rightNode.Direction = Direction.Right;
                 }
-                if (previousNode == null)
+                else
+                {
+                    rightNode = new GraphNode(node.X, node.Y + 1, node, node.CurrentPathCost + grid[node.X][node.Y + 1]);
+                    rightNode.Direction = Direction.Right;
+                }
+
+                
+                //if(rightNode.ParentNode is not null)
+                //{
+                //    rightNode.ParentNode.Direction = Direction.Right;
+                //}
+                
+                if (!InPathHistory(rightNode, node) && MeetsThreeStraightConstraint(rightNode))
                 {
                     adj.Add(rightNode);
                 }
@@ -181,6 +415,60 @@ namespace AdventofCode2023.Days
 
             return adj;
 
+        }
+
+        private bool MeetsThreeStraightConstraint(GraphNode node)
+        {
+            int straightCount = 0;
+
+            int xCount = 0;
+            int yCount = 0;
+
+            GraphNode parentNode = node.ParentNode;
+
+            //if(node.X < 3 && node.Y < 3)
+            //{
+            //    return true;
+            //}
+
+            for (int i = 0; i < 3; i++)
+            {
+                if (parentNode != null)
+                {
+                    if (parentNode.Direction == node.Direction)
+                    {
+                        straightCount++;
+                    }
+                    parentNode = parentNode.ParentNode;
+                }
+            }
+
+            if (straightCount == 3)
+            {
+                return false;
+            }
+
+            //if (xCount == 4 || yCount == 4)
+            //{
+            //    return false;
+            //}
+
+            return true;
+        }
+
+        private bool InPathHistory(GraphNode test, GraphNode source)
+        {
+            var parent = source.ParentNode;
+            while(parent != null)
+            {
+                if(test.X == parent.X && test.Y == parent.Y)
+                {
+                    return true;
+                }
+                parent = parent.ParentNode;
+            }
+
+            return false;
         }
 
         private GraphNode? InExplored(GraphNode node, ref List<GraphNode> explored)
@@ -196,26 +484,39 @@ namespace AdventofCode2023.Days
 
             return null;
         }
-     }
 
-    public class GraphNode
-    {
-        public int X;
-        public int Y;
-        public GraphNode? ParentNode { get; set; }
-        public int CurrentPathCost { get; set; }
-        public int CurrentStraightCount { get; set; }
-
-        public GraphNode(int x, int y, GraphNode? parent, int cost = 0)
+        private class GraphNode
         {
-            X = x;
-            Y = y;
-            ParentNode = parent;
-            CurrentPathCost = cost;
-            CurrentStraightCount = 0;
+            public int X;
+            public int Y;
+            public GraphNode? ParentNode { get; set; }
+            public int CurrentPathCost { get; set; }
+            public int CurrentStraightCount { get; set; }
+            public Direction Direction { get; set; }
+            public int DirectionCount { get; set; }
+
+            public GraphNode(int x, int y, GraphNode? parent, int cost = 0)
+            {
+                X = x;
+                Y = y;
+                ParentNode = parent;
+                CurrentPathCost = cost;
+                CurrentStraightCount = 0;
+            }
         }
 
+        private enum Direction
+        {
+            Up,
+            Down,
+            Left,
+            Right
+        }
     }
+
+    
+
+    
 
 }
 
